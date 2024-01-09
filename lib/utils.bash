@@ -37,12 +37,19 @@ list_all_versions() {
 }
 
 download_release() {
-	local version filename url
+	local version filename url os arch
 	version="$1"
 	filename="$2"
+	os=$(uname | tr '[:upper:]' '[:lower:]')
+	if [ "$os" = "darwin" ]; then
+		os="osx"
+	fi
+	arch=$(uname -m)
+	if [ "$arch" = "aarch64" ] || [ "$arch" == "arm64" ]; then
+		arch="aarch_64"
+	fi
 
-	# TODO: Adapt the release URL convention for protoc
-	url="$GH_REPO/archive/v${version}.tar.gz"
+	url="$GH_REPO/releases/download/v${version}/${TOOL_NAME}-${version}-${os}-${arch}.zip"
 
 	echo "* Downloading $TOOL_NAME release $version..."
 	curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
@@ -59,7 +66,7 @@ install_version() {
 
 	(
 		mkdir -p "$install_path"
-		cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
+		cp -r "$ASDF_DOWNLOAD_PATH"/${TOOL_NAME} "$install_path"
 
 		# TODO: Assert protoc executable exists.
 		local tool_cmd
